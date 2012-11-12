@@ -67,13 +67,17 @@ class Activity:
         """
 
         row = line.split()
-        self.UID = row[0]   # Device ID
-        self.PID = row[1]   # Process ID
-        self.D = row[2]     # Read/Write
 
-        # NEED TO CONTINUE HERE ...
-        # NEED TO THROW A PARSE_ERROR WHEN THE INPUT LINE IS NOT
-        # FORMATTED CORRECTLY
-        pass
+        #[user_id, process_id, access_type, Block, size, command, pathname]
 
-
+        try:
+            self.user_id = int(row[0])   # Device ID
+            self.process_id = int(row[1])   # Process ID
+            self.access_type = row[2]     # Read/Write
+            self.block = row[3]
+            self.size = row[4]
+            self.command = row[5]
+            self.pathname = row[6]
+        except Exception, e:
+            raise RuntimeError("Tracer line inccorrectly formated, parsing failed.  Failure due to error %s" % e)
+        return
