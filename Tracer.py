@@ -30,10 +30,13 @@ class Trace:
             - return type : <void>
         """
         f = open(filename, 'r')
-        for line in f:
+        for i,line in enumerate(f):
+            # don't look at the first line, it's the header line
+            if i==0:
+                continue
             activity = Activity()
-            activity.Parse(line)
-            self.activities.append( activity )
+            if activity.Parse(line):
+                self.activities.append( activity )
 
 
 class Activity:
@@ -65,7 +68,7 @@ class Activity:
 
             - return type : <void>
         """
-
+    
         row = line.split()
 
         #[user_id, process_id, access_type, Block, size, command, pathname]
@@ -79,5 +82,10 @@ class Activity:
             self.command = row[5]
             self.pathname = row[6]
         except Exception, e:
-            raise RuntimeError("Tracer line inccorrectly formated, parsing failed.  Failure due to error %s" % e)
-        return
+            print "Tracer line inccorrectly formated, parsing failed.  Failure due to error %s" % e
+            print "line was:"
+            print line
+            print "continuing to next line"
+            # raise RuntimeError("Tracer line inccorrectly formated, parsing failed.  Failure due to error %s" % e)
+            return False
+        return True
