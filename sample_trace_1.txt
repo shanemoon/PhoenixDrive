@@ -1,0 +1,2 @@
+100 15795 W    39828   6144        tar /usr/bin/env
+100 15795 R     3872   8192        tar /usr/bin/expr
