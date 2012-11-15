@@ -25,9 +25,9 @@ class VirtualEnvironment:
         """
         # Refer to Tracer.py for more info on <Activity> object.
 
-        if activity.D == 'R':
+        if activity.access_type == 'R':
             self.ReadFile()
-        elif activity.D == 'W':
+        elif activity.access_type == 'W':
             self.WriteFile()
         else:
             # NEED TO HANDLE ERROR HERE
