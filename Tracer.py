@@ -21,12 +21,13 @@ class Trace:
             - filename : <String>
                          filename of the file that contains the iosnoop logs
                          e.g.
-                         UID   PID D    BLOCK   SIZE       COMM PATHNAME
-                         100 15795 R     3808   8192        tar /usr/bin/eject
-                         100 15795 R    35904   6144        tar /usr/bin/eject
-                         100 15795 R    39828   6144        tar /usr/bin/env
-                         100 15795 R     3872   8192        tar /usr/bin/expr
-                         
+
+                         STIME    TIME     DELTA   UID   PID D    BLOCK   SIZE       COMM PATHNAME
+                         6430320  6892892  1201    100 15795 R     3808   8192        tar /usr/bin/eject
+                         6503020  6900020  1192    100 15795 R    35904   6144        tar /usr/bin/eject
+                         6603034  7030042  4121    100 15795 R    39828   6144        tar /usr/bin/env
+                         6663040  7000000  1326    100 15795 R     3872   8192        tar /usr/bin/expr
+                                 
             - return type : <void>
         """
         f = open(filename, 'r')
@@ -74,13 +75,16 @@ class Activity:
         #[user_id, process_id, access_type, Block, size, command, pathname]
 
         try:
-            self.user_id = int(row[0])   # Device ID
-            self.process_id = int(row[1])   # Process ID
-            self.access_type = row[2]     # Read/Write
-            self.block = row[3]
-            self.size = row[4]
-            self.command = row[5]
-            self.pathname = row[6]
+            self.start_time = int(row[0])
+            self.end_time = int(row[1])
+            self.delta = int(row[2])
+            self.user_id = int(row[3])   # Device ID
+            self.process_id = int(row[4])   # Process ID
+            self.access_type = row[5]     # Read/Write
+            self.block = row[6]
+            self.size = int(row[7])
+            self.command = row[8]
+            self.pathname = row[9]
         except Exception, e:
             print "Tracer line inccorrectly formated, parsing failed.  Failure due to error %s" % e
             print "line was:"

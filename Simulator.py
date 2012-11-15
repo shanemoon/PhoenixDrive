@@ -42,16 +42,17 @@ class Simulator:
 
     def Analyze(self):
         print "Analyzing the result of the simulation"
-        pass
+        self.env.reporter.display_results()
+        
     
 if __name__ == '__main__':
 
     # Parse Traces
     trace1 = Trace()
-    trace1.Parse('sample_trace_1.txt') # NEED_TO_IMPLEMENT
+    trace1.Parse('snoop2') 
 
     trace2 = Trace()
-    trace2.Parse('sample_trace_2.txt') # NEED_TO_IMPLEMENT
+    trace2.Parse('snoop2') 
 
     traces = [trace1, trace2]
 
@@ -64,3 +65,7 @@ if __name__ == '__main__':
     hdd_simulator.Simulate()
     ssd_simulator.Simulate()
     pd_simulator.Simulate()
+
+    hdd_simulator.Analyze()
+    ssd_simulator.Analyze()
+    pd_simulator.Analyze()
