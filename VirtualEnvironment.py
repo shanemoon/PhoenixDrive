@@ -22,6 +22,7 @@ class Reporter:
         self.drive_type = drive_type
 
     def display_results(self):
+        print "Displaying the result of drive type: %s" % self.drive_type
         print "total io time: %f" % self.total_io_time
         print "total read time: %f" % self.read_time
         print "total write time: %f" % self.write_time
@@ -94,7 +95,7 @@ class HDD(VirtualEnvironment):
 
     
     def ReadFile(self,file_size):
-        print "Read file on the virtual HDD environment"
+        #print "Read file on the virtual HDD environment"
         # According to wikipedia, average seek time is ~8-12ms, and max read rate for an average HDD is ~ 140 MB/s (we should probably check the numbers somewhat more if we can), so let's put in a range from 80,000 to 140,000 kB/s).
         seek_time = random.randrange(800, 1200) / 100000.0 # ends up with units of seconds
         lookup_rate = random.randrange(80000,140000) # in kB/s
@@ -103,7 +104,7 @@ class HDD(VirtualEnvironment):
         return read_time # in seconds
 
     def WriteFile(self,file_size):
-        print "Write file on the virtual HDD environment"
+        #print "Write file on the virtual HDD environment"
         write_rate = random.randrange(80000,125000) #same range?
         write_time = float(file_size) / write_rate
         return write_time
@@ -116,7 +117,7 @@ class SSD(VirtualEnvironment):
 
     
     def ReadFile(self,file_size):
-        print "Read file on the virtual SSD environment"
+        #print "Read file on the virtual SSD environment"
         # According to wikipedia, data access time is about 0.1ms, and data transfer rate is between 100-600MB/s, let's say 400MB/s is reasonable
         access_time = 0.1 / 1000 #in seconds
         transfer_rate = 400 * 1000000 #in ~bytes/s
@@ -125,7 +126,7 @@ class SSD(VirtualEnvironment):
 
     
     def WriteFile(self,file_size):
-        print "Write file on the virtual SSD environment"
+        #print "Write file on the virtual SSD environment"
         access_time = 0.1 / 1000 #in seconds
         transfer_rate = 400 * 1000000 #in ~bytes/s
         write_time = access_time + file_size / transfer_rate
@@ -139,7 +140,7 @@ class PD(VirtualEnvironment):
         
 
     def ReadFile(self, file_size):
-        print "Read file on the virtual Phoenix Drive environment"
+        #print "Read file on the virtual Phoenix Drive environment"
         #eventually do this based on file extensions and other parameters, for now just choose at random
         drive = random.choice(['hdd', 'ssd'])
         if drive == 'hdd':
@@ -151,7 +152,7 @@ class PD(VirtualEnvironment):
         return read_time
 
     def WriteFile(self, file_size):
-        print "Write file on the virtual Phoenix Drive environment"
+        #print "Write file on the virtual Phoenix Drive environment"
         drive = random.choice(['hdd', 'ssd'])
         if drive == 'hdd':
             write_time = HDD().WriteFile(file_size)
