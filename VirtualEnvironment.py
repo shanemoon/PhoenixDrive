@@ -136,6 +136,8 @@ class SSD(VirtualEnvironment):
 class PD(VirtualEnvironment):
     def __init__(self):
         self.drive_type = "PD"
+        self.HDD = HDD()
+        self.SSD = SSD()
         VirtualEnvironment.__init__(self)
         
 
@@ -144,18 +146,18 @@ class PD(VirtualEnvironment):
         #eventually do this based on file extensions and other parameters, for now just choose at random
         drive = random.choice(['hdd', 'ssd'])
         if drive == 'hdd':
-            read_time = HDD().ReadFile(file_size)
+            read_time = self.HDD.ReadFile(file_size)
             #temp_hdd = new HDD()
             #read_time = temp_hdd.ReadFile(file_size)
         else :
-            read_time = SSD().ReadFile(file_size)
+            read_time = self.SSD.ReadFile(file_size)
         return read_time
 
     def WriteFile(self, file_size):
         #print "Write file on the virtual Phoenix Drive environment"
         drive = random.choice(['hdd', 'ssd'])
         if drive == 'hdd':
-            write_time = HDD().WriteFile(file_size)
+            write_time = self.HDD.WriteFile(file_size)
         else :
-            write_time = SSD().WriteFile(file_size)
+            write_time = self.SSD.WriteFile(file_size)
         return write_time
