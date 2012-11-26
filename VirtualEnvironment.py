@@ -105,17 +105,27 @@ class HDD(VirtualEnvironment):
     
     def ReadFile(self,file_size):
         #print "Read file on the virtual HDD environment"
-        # According to wikipedia, average seek time is ~8-12ms, and max read rate for an average HDD is ~ 140 MB/s (we should probably check the numbers somewhat more if we can), so let's put in a range from 80,000 to 140,000 kB/s).
-        seek_time = random.randrange(800, 1200) / 100000.0 # ends up with units of seconds
+
+        # According to wikipedia, average seek time is ~8-12ms
+        # However, to dramatize the difference, I'll increase the range
+        # to 5~15ms.
+        seek_time = random.randrange(500, 1500) / 100.0 / 1000000 # ends up with units of seconds
+        
+        # Max read rate for an average HDD is ~ 140 MB/s
+        # (we should probably check the numbers somewhat more if we can)
+        # so let's put in a range from 80,000 to 140,000 kB/s).
         lookup_rate = random.randrange(80000,140000) # in kB/s
         file_size_kb = float(file_size) / 1000 #file_size should come in bytes
         read_time = seek_time + file_size_kb / lookup_rate 
+
         return read_time # in seconds
 
     def WriteFile(self,file_size):
         #print "Write file on the virtual HDD environment"
-        write_rate = random.randrange(80000,125000) #same range?
-        write_time = float(file_size) / write_rate
+
+        write_rate = random.randrange(80000,140000) #same range?
+        file_size_kb = float(file_size) / 1000 #file_size should come in bytes
+        write_time = float(file_size_kb) / write_rate
         return write_time
 
 
