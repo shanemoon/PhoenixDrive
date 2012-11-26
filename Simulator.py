@@ -54,7 +54,7 @@ if __name__ == '__main__':
     trace2 = Trace()
     trace2.Parse('snoop2') 
 
-    traces = [trace1, trace2]
+    traces = [trace1]
 
     # Initiate Simulators
     hdd_simulator = Simulator( traces, HDD() )

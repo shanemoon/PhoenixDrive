@@ -11,13 +11,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Reporter:
-    def __init__(self,drive_type):
+    def __init__(self, drive_type):
         self.total_io_time = 0
         self.read_time = 0
         self.write_time = 0
         self.write_durations = []  # amount time required for completion
         self.write_start_times = []  # time io occured at
+        self.write_durations_cumulative = [] # cumulative
         self.read_durations  = []
+        self.read_durations_cumulative = []
         self.read_start_times  = []
         self.drive_type = drive_type
 
@@ -31,12 +33,16 @@ class Reporter:
 
         writes = fig.add_subplot(2,1,1)
         writes.set_title("writes")
+        writes.set_xlabel("Timestamp (sec)")
+        writes.set_ylabel("Cumulative Write Times (sec)")
 
         reads = fig.add_subplot(2,1,2)
         reads.set_title("reads")
+        reads.set_xlabel("Timestamp (sec)")
+        reads.set_ylabel("Cumulative Read Times (sec)")
 
-        writes.plot(self.write_start_times,self.write_durations)
-        reads.plot(self.read_start_times,self.read_durations)
+        writes.plot(self.write_start_times, self.write_durations_cumulative)
+        reads.plot(self.read_start_times, self.read_durations_cumulative)
 
         plt.show()
 
@@ -60,13 +66,15 @@ class VirtualEnvironment:
         """
         # Refer to Tracer.py for more info on <Activity> object.
 
-        io_start_time = activity.start_time
+        # Convert micro second to second
+        io_start_time = activity.start_time / 1000000.0
 
         if activity.access_type == 'R':
             io_duration = self.ReadFile(activity.size)
             self.reporter.read_time += io_duration
             self.reporter.total_io_time += io_duration
             self.reporter.read_durations.append(io_duration)
+            self.reporter.read_durations_cumulative.append(self.reporter.read_time)
             self.reporter.read_start_times.append(io_start_time)
 
         elif activity.access_type == 'W':
@@ -74,6 +82,7 @@ class VirtualEnvironment:
             self.reporter.write_time += io_duration
             self.reporter.total_io_time += io_duration
             self.reporter.write_durations.append(io_duration)
+            self.reporter.write_durations_cumulative.append(self.reporter.write_time)
             self.reporter.write_start_times.append(io_start_time)
             
         else:
