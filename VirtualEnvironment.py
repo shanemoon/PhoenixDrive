@@ -28,7 +28,7 @@ class Reporter:
         print "total io time: %f" % self.total_io_time
         print "total read time: %f" % self.read_time
         print "total write time: %f" % self.write_time
-        fig = plt.figure()
+        fig = plt.figure(figsize=(9,9))
         fig.suptitle(self.drive_type)
 
         writes = fig.add_subplot(2,1,1)
