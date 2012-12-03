@@ -43,7 +43,32 @@ class Simulator:
     def Analyze(self):
         print "Analyzing the result of the simulation"
         self.env.reporter.display_results()
-        
+
+def Compare(filename, reporters):
+
+        fig = plt.figure(figsize=(9,9))
+        fig.suptitle("Comparision Result")
+
+        writes = fig.add_subplot(2,1,1)
+        writes.set_title("Writes")
+        writes.set_xlabel("Timestamp (sec)")
+        writes.set_ylabel("Cumulative Write Times (sec)")
+
+        reads = fig.add_subplot(2,1,2)
+        reads.set_title("Reads")
+        reads.set_xlabel("Timestamp (sec)")
+        reads.set_ylabel("Cumulative Read Times (sec)")
+
+        writes.hold(True)
+        reads.hold(True)
+        for reporter in reporters:
+            writes.plot(reporter.write_start_times, reporter.write_durations_cumulative, label=reporter.drive_type)
+            reads.plot(reporter.read_start_times, reporter.read_durations_cumulative, label=reporter.drive_type)
+
+        writes.legend()
+        reads.legend()
+        plt.savefig(filename)
+    
     
 if __name__ == '__main__':
 
@@ -70,10 +95,9 @@ if __name__ == '__main__':
     ssd_simulator.Simulate()
     print("running pd")
     pd_simulator.Simulate()
+    # Analyze and Compare the Results
+    Compare('comparison.png',
+            [hdd_simulator.env.reporter,
+             ssd_simulator.env.reporter,
+             pd_simulator.env.reporter])
 
-    print("analyzing hdd")
-    hdd_simulator.Analyze()
-    print("analyzing ssd")
-    ssd_simulator.Analyze()
-    print("analyzing pd")
-    pd_simulator.Analyze()

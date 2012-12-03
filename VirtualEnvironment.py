@@ -11,13 +11,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class Reporter:
-    def __init__(self,drive_type):
+    def __init__(self, drive_type):
         self.total_io_time = 0
         self.read_time = 0
         self.write_time = 0
         self.write_durations = []  # amount time required for completion
         self.write_start_times = []  # time io occured at
+        self.write_durations_cumulative = [] # cumulative
         self.read_durations  = []
+        self.read_durations_cumulative = []
         self.read_start_times  = []
         self.drive_type = drive_type
 
@@ -26,18 +28,22 @@ class Reporter:
         print "total io time: %f" % self.total_io_time
         print "total read time: %f" % self.read_time
         print "total write time: %f" % self.write_time
-        # fig = plt.figure()
-        # fig.suptitle(self.drive_type)
 
-        # writes = fig.add_subplot(2,1,1)
-        # writes.set_title("writes")
+        fig = plt.figure(figsize=(9,9))
+        fig.suptitle(self.drive_type)
 
-        # reads = fig.add_subplot(2,1,2)
-        # reads.set_title("reads")
+        writes = fig.add_subplot(2,1,1)
+        writes.set_title("writes")
+        writes.set_xlabel("Timestamp (sec)")
+        writes.set_ylabel("Cumulative Write Times (sec)")
 
-        # writes.plot(self.write_start_times,self.write_durations)
-        # reads.plot(self.read_start_times,self.read_durations)
+        reads = fig.add_subplot(2,1,2)
+        reads.set_title("reads")
+        reads.set_xlabel("Timestamp (sec)")
+        reads.set_ylabel("Cumulative Read Times (sec)")
 
+        writes.plot(self.write_start_times, self.write_durations_cumulative)
+        reads.plot(self.read_start_times, self.read_durations_cumulative)
         # plt.show()
 
 
@@ -60,13 +66,15 @@ class VirtualEnvironment:
         """
         # Refer to Tracer.py for more info on <Activity> object.
 
-        io_start_time = activity.start_time
+        # Convert micro second to second
+        io_start_time = activity.start_time / 1000000.0
 
         if activity.access_type == 'R':
             io_duration = self.ReadFile(activity.size)
             self.reporter.read_time += io_duration
             self.reporter.total_io_time += io_duration
             self.reporter.read_durations.append(io_duration)
+            self.reporter.read_durations_cumulative.append(self.reporter.read_time)
             self.reporter.read_start_times.append(io_start_time)
 
         elif activity.access_type == 'W':
@@ -74,6 +82,7 @@ class VirtualEnvironment:
             self.reporter.write_time += io_duration
             self.reporter.total_io_time += io_duration
             self.reporter.write_durations.append(io_duration)
+            self.reporter.write_durations_cumulative.append(self.reporter.write_time)
             self.reporter.write_start_times.append(io_start_time)
             
         else:
@@ -96,17 +105,27 @@ class HDD(VirtualEnvironment):
     
     def ReadFile(self,file_size):
         #print "Read file on the virtual HDD environment"
-        # According to wikipedia, average seek time is ~8-12ms, and max read rate for an average HDD is ~ 140 MB/s (we should probably check the numbers somewhat more if we can), so let's put in a range from 80,000 to 140,000 kB/s).
-        seek_time = randrange(800, 1200) / 100000.0 # ends up with units of seconds
-        lookup_rate = randrange(80000,140000) # in kB/s
+
+
+        # According to wikipedia, average seek time is ~8-12ms
+        # However, to dramatize the difference, I'll increase the range
+        # to 5~15ms.
+        seek_time = random.randrange(500, 1500) / 100.0 / 1000000 # ends up with units of seconds
+        
+        # Max read rate for an average HDD is ~ 140 MB/s
+        # (we should probably check the numbers somewhat more if we can)
+        # so let's put in a range from 80,000 to 140,000 kB/s).
+        lookup_rate = random.randrange(80000,140000) # in kB/s
         file_size_kb = float(file_size) / 1000 #file_size should come in bytes
         read_time = seek_time + file_size_kb / lookup_rate 
+
         return read_time # in seconds
 
     def WriteFile(self,file_size):
         #print "Write file on the virtual HDD environment"
-        write_rate = randrange(80000,125000) #same range?
-        write_time = float(file_size) / write_rate
+        write_rate = random.randrange(80000,140000) #same range?
+        file_size_kb = float(file_size) / 1000 #file_size should come in bytes
+        write_time = float(file_size_kb) / write_rate
         return write_time
 
 
