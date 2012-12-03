@@ -44,6 +44,19 @@ class Simulator:
         print "Analyzing the result of the simulation"
         self.env.reporter.display_results()
 
+def generate_phoenix_curve_plot(io_time,ssd_sizes):
+    fig = plt.figure(figsize=(9,9))
+    fig.suptitle("Phoenix Curve")
+    io_time_plot = fig.add_subplot(2,1,1)
+    io_time_plot.set_title("Total i/o vs. ssd buffer size")
+    io_time_plot.set_xlabel("ssd sixe (Gb)")
+    io_time_plot.set_ylabel("Cumulative i/o Times (sec)")
+    print(len(io_time) )
+    print(len(ssd_sizes) )
+    io_time_plot.plot(ssd_sizes,io_time)
+    plt.savefig("phoenix_curve.png")
+
+
 def Compare(filename, reporters):
 
         fig = plt.figure(figsize=(9,9))
@@ -68,7 +81,43 @@ def Compare(filename, reporters):
         writes.legend()
         reads.legend()
         plt.savefig(filename)
-    
+
+def phoenix_curve_study(traces):
+    pd_io_times = []   
+    # Initiate Simulators
+    ssd_max_size = 128
+    hdd_max_size = 1024
+    ssd_sizes = range(0,ssd_max_size,10) + [ssd_max_size]
+    print(ssd_sizes)
+    hdd_step = float(hdd_max_size)/ssd_max_size    
+    for ssd_size in ssd_sizes:
+        hdd_size = hdd_max_size - (ssd_size*hdd_step)
+        print("initializing simulators")
+        pd_simulator = Simulator( traces, PD(hdd_size,ssd_size) )
+        print("running pd")
+        pd_simulator.Simulate()
+        print("saving results")
+        pd_io_times.append(pd_simulator.env.reporter.total_io_time)
+    print(len(pd_io_times) )
+    print(len(ssd_sizes) )
+    generate_phoenix_curve_plot(pd_io_times,ssd_sizes)
+
+def drive_type_comparitive_study(traces):
+     # Initiate Simulators
+    hdd_simulator = Simulator( traces, HDD(1024) )
+    ssd_simulator = Simulator( traces, SSD(128) )
+    pd_simulator = Simulator( traces, PD(300,64) )
+
+    # Run Simulators
+    hdd_simulator.Simulate()
+    ssd_simulator.Simulate()
+    pd_simulator.Simulate()
+
+    # Analyze and Compare the Results
+    Compare('comparison.png',
+            [hdd_simulator.env.reporter,
+             ssd_simulator.env.reporter,
+             pd_simulator.env.reporter])
     
 if __name__ == '__main__':
 
@@ -82,22 +131,9 @@ if __name__ == '__main__':
 
     traces = [trace1]
 
-    # Initiate Simulators
-    print("initializing simulators")
-    hdd_simulator = Simulator( traces, HDD() )
-    ssd_simulator = Simulator( traces, SSD() )
-    pd_simulator = Simulator( traces, PD() )
+    drive_type_comparitive_study(traces)
+    # phoenix_curve_study(traces)
 
-    # Run Simulators
-    print("running hdd")
-    hdd_simulator.Simulate()
-    print("running ssd")
-    ssd_simulator.Simulate()
-    print("running pd")
-    pd_simulator.Simulate()
-    # Analyze and Compare the Results
-    Compare('comparison.png',
-            [hdd_simulator.env.reporter,
-             ssd_simulator.env.reporter,
-             pd_simulator.env.reporter])
-
+    
+    
+    

@@ -97,8 +97,9 @@ class VirtualEnvironment:
 
 
 class HDD(VirtualEnvironment):
-    def __init__(self):
+    def __init__(self, size):
         self.drive_type = "HDD"
+        self.size = size
         VirtualEnvironment.__init__(self)
         
 
@@ -110,12 +111,12 @@ class HDD(VirtualEnvironment):
         # According to wikipedia, average seek time is ~8-12ms
         # However, to dramatize the difference, I'll increase the range
         # to 5~15ms.
-        seek_time = random.randrange(500, 1500) / 100.0 / 1000000 # ends up with units of seconds
+        seek_time = randrange(500, 1500) / 100.0 / 1000000 # ends up with units of seconds
         
         # Max read rate for an average HDD is ~ 140 MB/s
         # (we should probably check the numbers somewhat more if we can)
         # so let's put in a range from 80,000 to 140,000 kB/s).
-        lookup_rate = random.randrange(80000,140000) # in kB/s
+        lookup_rate = randrange(80000,140000) # in kB/s
         file_size_kb = float(file_size) / 1000 #file_size should come in bytes
         read_time = seek_time + file_size_kb / lookup_rate 
 
@@ -123,15 +124,16 @@ class HDD(VirtualEnvironment):
 
     def WriteFile(self,file_size):
         #print "Write file on the virtual HDD environment"
-        write_rate = random.randrange(80000,140000) #same range?
+        write_rate = randrange(80000,140000) #same range?
         file_size_kb = float(file_size) / 1000 #file_size should come in bytes
         write_time = float(file_size_kb) / write_rate
         return write_time
 
 
 class SSD(VirtualEnvironment):
-    def __init__(self):
+    def __init__(self,size):
         self.drive_type = "SSD"
+        self.size = size
         VirtualEnvironment.__init__(self)
 
     
@@ -153,17 +155,19 @@ class SSD(VirtualEnvironment):
         
 
 class PD(VirtualEnvironment):
-    def __init__(self):
+    def __init__(self,hdd_size,ssd_size):
         self.drive_type = "PD"
-        self.HDD = HDD()
-        self.SSD = SSD()
+        self.HDD = HDD(hdd_size)
+        self.SSD = SSD(ssd_size)
+        self.total_size = hdd_size+ssd_size
+        self.ssd_size = ssd_size
         VirtualEnvironment.__init__(self)
         
 
     def ReadFile(self, file_size):
         #print "Read file on the virtual Phoenix Drive environment"
         #eventually do this based on file extensions and other parameters, for now just choose at random
-        drive = choice(['hdd', 'ssd'])
+        drive = "hdd" if randrange(0,self.total_size) > self.ssd_size else 'ssd'
         if drive == 'hdd':
             read_time = self.HDD.ReadFile(file_size)
             #temp_hdd = new HDD()
@@ -174,7 +178,7 @@ class PD(VirtualEnvironment):
 
     def WriteFile(self, file_size):
         #print "Write file on the virtual Phoenix Drive environment"
-        drive = choice(['hdd', 'ssd'])
+        drive = "hdd" if randrange(0,self.HDD.size+self.SSD.size) > self.SSD.size else 'ssd'
         if drive == 'hdd':
             write_time = self.HDD.WriteFile(file_size)
         else :
