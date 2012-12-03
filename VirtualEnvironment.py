@@ -5,7 +5,7 @@
     Description : 
 """
 
-import random
+from random import randrange, choice
 import math
 import numpy as np
 import matplotlib.pyplot as plt
@@ -26,19 +26,19 @@ class Reporter:
         print "total io time: %f" % self.total_io_time
         print "total read time: %f" % self.read_time
         print "total write time: %f" % self.write_time
-        fig = plt.figure()
-        fig.suptitle(self.drive_type)
+        # fig = plt.figure()
+        # fig.suptitle(self.drive_type)
 
-        writes = fig.add_subplot(2,1,1)
-        writes.set_title("writes")
+        # writes = fig.add_subplot(2,1,1)
+        # writes.set_title("writes")
 
-        reads = fig.add_subplot(2,1,2)
-        reads.set_title("reads")
+        # reads = fig.add_subplot(2,1,2)
+        # reads.set_title("reads")
 
-        writes.plot(self.write_start_times,self.write_durations)
-        reads.plot(self.read_start_times,self.read_durations)
+        # writes.plot(self.write_start_times,self.write_durations)
+        # reads.plot(self.read_start_times,self.read_durations)
 
-        plt.show()
+        # plt.show()
 
 
 class VirtualEnvironment:
@@ -97,15 +97,15 @@ class HDD(VirtualEnvironment):
     def ReadFile(self,file_size):
         #print "Read file on the virtual HDD environment"
         # According to wikipedia, average seek time is ~8-12ms, and max read rate for an average HDD is ~ 140 MB/s (we should probably check the numbers somewhat more if we can), so let's put in a range from 80,000 to 140,000 kB/s).
-        seek_time = random.randrange(800, 1200) / 100000.0 # ends up with units of seconds
-        lookup_rate = random.randrange(80000,140000) # in kB/s
+        seek_time = randrange(800, 1200) / 100000.0 # ends up with units of seconds
+        lookup_rate = randrange(80000,140000) # in kB/s
         file_size_kb = float(file_size) / 1000 #file_size should come in bytes
         read_time = seek_time + file_size_kb / lookup_rate 
         return read_time # in seconds
 
     def WriteFile(self,file_size):
         #print "Write file on the virtual HDD environment"
-        write_rate = random.randrange(80000,125000) #same range?
+        write_rate = randrange(80000,125000) #same range?
         write_time = float(file_size) / write_rate
         return write_time
 
@@ -144,7 +144,7 @@ class PD(VirtualEnvironment):
     def ReadFile(self, file_size):
         #print "Read file on the virtual Phoenix Drive environment"
         #eventually do this based on file extensions and other parameters, for now just choose at random
-        drive = random.choice(['hdd', 'ssd'])
+        drive = choice(['hdd', 'ssd'])
         if drive == 'hdd':
             read_time = self.HDD.ReadFile(file_size)
             #temp_hdd = new HDD()
@@ -155,7 +155,7 @@ class PD(VirtualEnvironment):
 
     def WriteFile(self, file_size):
         #print "Write file on the virtual Phoenix Drive environment"
-        drive = random.choice(['hdd', 'ssd'])
+        drive = choice(['hdd', 'ssd'])
         if drive == 'hdd':
             write_time = self.HDD.WriteFile(file_size)
         else :

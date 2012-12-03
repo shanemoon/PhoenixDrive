@@ -48,24 +48,32 @@ class Simulator:
 if __name__ == '__main__':
 
     # Parse Traces
+    print("parsing the snoop")
     trace1 = Trace()
     trace1.Parse('snoop2') 
 
-    trace2 = Trace()
-    trace2.Parse('snoop2') 
+    # trace2 = Trace()
+    # trace2.Parse('snoop2') 
 
-    traces = [trace1, trace2]
+    traces = [trace1]
 
     # Initiate Simulators
+    print("initializing simulators")
     hdd_simulator = Simulator( traces, HDD() )
     ssd_simulator = Simulator( traces, SSD() )
     pd_simulator = Simulator( traces, PD() )
 
     # Run Simulators
+    print("running hdd")
     hdd_simulator.Simulate()
+    print("running ssd")
     ssd_simulator.Simulate()
+    print("running pd")
     pd_simulator.Simulate()
 
+    print("analyzing hdd")
     hdd_simulator.Analyze()
+    print("analyzing ssd")
     ssd_simulator.Analyze()
+    print("analyzing pd")
     pd_simulator.Analyze()
