@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 
 class Reporter:
     def __init__(self, drive_type):
+        self.total_num_activity = 0
         self.total_io_time = 0
         self.read_time = 0
         self.write_time = 0
@@ -72,7 +73,6 @@ class VirtualEnvironment:
         if activity.access_type == 'R':
             io_duration = self.ReadFile(activity.size)
             self.reporter.read_time += io_duration
-            self.reporter.total_io_time += io_duration
             self.reporter.read_durations.append(io_duration)
             self.reporter.read_durations_cumulative.append(self.reporter.read_time)
             self.reporter.read_start_times.append(io_start_time)
@@ -80,7 +80,6 @@ class VirtualEnvironment:
         elif activity.access_type == 'W':
             io_duration = self.WriteFile(activity.size)
             self.reporter.write_time += io_duration
-            self.reporter.total_io_time += io_duration
             self.reporter.write_durations.append(io_duration)
             self.reporter.write_durations_cumulative.append(self.reporter.write_time)
             self.reporter.write_start_times.append(io_start_time)
@@ -88,6 +87,10 @@ class VirtualEnvironment:
         else:
             # NEED TO HANDLE ERROR HERE
             pass
+
+        # For any activity type
+        self.reporter.total_io_time += io_duration
+        self.reporter.total_num_activity += 1
 
     def ReadFile(self, file_size):
         pass
