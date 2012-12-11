@@ -132,12 +132,16 @@ def generate_phoenix_curve_plot_with_real_data(list_io_speeds, pcs):
     
     for i in range(len(pcs)):
         pc = pcs[i]
-        pd_io_speeds = list_io_speeds[i]
+        pd_io_speeds_rand = list_io_speeds[2*i]
+        print pd_io_speeds_rand
+        pd_io_speeds_freq = list_io_speeds[2*i+1]
         total_sizes = [pc_size[0] + pc_size[1] for pc_size in pc.sizes]
         
-        print("Length of io_time array:", len(pd_io_speeds) )
+        print("Lengths of io_time arrays:", len(pd_io_speeds_rand), len(pd_io_speeds_freq) )
         print("Length of total_sizes array:", len(total_sizes) )
-        io_time_plot.plot( total_sizes, pd_io_speeds, label="Budget: $%s" % pc.budget )
+        
+        io_time_plot.plot( total_sizes, pd_io_speeds_rand, label="Budget: $%s Allocation: Random" % pc.budget )
+        io_time_plot.plot( total_sizes, pd_io_speeds_freq, label="Budget: $%s Allocation: Frequency" % pc.budget )
     io_time_plot.legend()
     plt.savefig(filename)
 
@@ -153,23 +157,32 @@ def phoenix_curve_study_with_real_data(traces):
     list_io_speeds = []
 
     for pc in pcs:
-        pd_io_speeds = []
+        pd_io_speeds_rand = []
+        pd_io_speeds_freq = []
         print("Running for Phoneix Configuration with Budget %s" % pc.budget)
         for size in pc.sizes:
             hdd_size = size[0]
             ssd_size = size[1]
             print("Initializing simulators")
-            pd_simulator = Simulator( traces, PD(hdd_size, ssd_size) )
-            print("Running Phoenix Drive")
-            pd_simulator.Simulate()
+            pd_simulator_rand = Simulator( traces, PD(hdd_size, ssd_size, traces[0],'random') )
+            pd_simulator_freq = Simulator( traces, PD(hdd_size, ssd_size, traces[0],'frequency') )
+            print("Running Phoenix Drives")
+            pd_simulator_rand.Simulate()
+            pd_simulator_freq.Simulate()
             print("Saving Results")
 
             # Average Speed = (# of i/o Operations) / (# of Total Cumulative I/O Time in miliseconds)
-            speed = pd_simulator.env.reporter.total_num_activity / float(pd_simulator.env.reporter.total_io_time) / 1000.0
-            pd_io_speeds.append(speed)
-        print(len(pd_io_speeds) )
+            speed_rand = pd_simulator_rand.env.reporter.total_num_activity / float(pd_simulator_rand.env.reporter.total_io_time) / 1000.0
+            pd_io_speeds_rand.append(speed_rand)
+            
+            speed_freq = pd_simulator_freq.env.reporter.total_num_activity / float(pd_simulator_freq.env.reporter.total_io_time) / 1000.0
+            pd_io_speeds_freq.append(speed_freq)
+
+        print(len(pd_io_speeds_rand) )
+        print(len(pd_io_speeds_freq) )
         print(len(pc.sizes) )
-        list_io_speeds.append( pd_io_speeds )
+        list_io_speeds.append( pd_io_speeds_rand )
+        list_io_speeds.append( pd_io_speeds_freq )
         
     generate_phoenix_curve_plot_with_real_data(list_io_speeds, pcs)
     
@@ -178,18 +191,22 @@ def drive_type_comparitive_study(traces):
      # Initiate Simulators
     hdd_simulator = Simulator( traces, HDD(1024) )
     ssd_simulator = Simulator( traces, SSD(128) )
-    pd_simulator = Simulator( traces, PD(300,64) )
+
+    pd_simulator_rand = Simulator( traces, PD(300,64, traces[0], 'random') )
+    pd_simulator_freq = Simulator( traces, PD(300,64, traces[0], 'frequency') )
 
     # Run Simulators
     hdd_simulator.Simulate()
     ssd_simulator.Simulate()
-    pd_simulator.Simulate()
+    pd_simulator_rand.Simulate()
+    pd_simulator_freq.Simulate()
 
     # Analyze and Compare the Results
     Compare('comparison.png',
             [hdd_simulator.env.reporter,
              ssd_simulator.env.reporter,
-             pd_simulator.env.reporter])
+             pd_simulator_rand.env.reporter,
+             pd_simulator_freq.env.reporter])
     
 if __name__ == '__main__':
 
@@ -203,7 +220,7 @@ if __name__ == '__main__':
 
     traces = [trace1]
 
-    # drive_type_comparitive_study(traces)
+    drive_type_comparitive_study(traces)
     # phoenix_curve_study(traces)
     phoenix_curve_study_with_real_data(traces)
 

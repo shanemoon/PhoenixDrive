@@ -1,10 +1,11 @@
 """
     Filename    : VirtualEnvironment.py
     Authors     : Shane Moon, Hannah Sarver
-    Last Update : November 12, 2012
-    Description : 
+    Last Update : December 11, 2012
+    Description : Currently a problem with self.allocation changing for no apparent reason
 """
 
+import random
 from random import randrange, choice
 import math
 import numpy as np
@@ -71,14 +72,14 @@ class VirtualEnvironment:
         io_start_time = activity.start_time / 1000000.0
 
         if activity.access_type == 'R':
-            io_duration = self.ReadFile(activity.size)
+            io_duration = self.ReadFile(activity)
             self.reporter.read_time += io_duration
             self.reporter.read_durations.append(io_duration)
             self.reporter.read_durations_cumulative.append(self.reporter.read_time)
             self.reporter.read_start_times.append(io_start_time)
 
         elif activity.access_type == 'W':
-            io_duration = self.WriteFile(activity.size)
+            io_duration = self.WriteFile(activity)
             self.reporter.write_time += io_duration
             self.reporter.write_durations.append(io_duration)
             self.reporter.write_durations_cumulative.append(self.reporter.write_time)
@@ -92,10 +93,10 @@ class VirtualEnvironment:
         self.reporter.total_io_time += io_duration
         self.reporter.total_num_activity += 1
 
-    def ReadFile(self, file_size):
+    def ReadFile(self, activity):
         pass
 
-    def WriteFile(self, file_size):
+    def WriteFile(self, activity):
         pass
 
 
@@ -107,7 +108,8 @@ class HDD(VirtualEnvironment):
         
 
     
-    def ReadFile(self,file_size):
+    def ReadFile(self,activity):
+        file_size = activity.size
         #print "Read file on the virtual HDD environment"
 
 
@@ -125,7 +127,8 @@ class HDD(VirtualEnvironment):
 
         return read_time # in seconds
 
-    def WriteFile(self,file_size):
+    def WriteFile(self,activity):
+        file_size = activity.size
         #print "Write file on the virtual HDD environment"
         write_rate = randrange(80000,140000) #same range?
         file_size_kb = float(file_size) / 1000 #file_size should come in bytes
@@ -140,7 +143,8 @@ class SSD(VirtualEnvironment):
         VirtualEnvironment.__init__(self)
 
     
-    def ReadFile(self,file_size):
+    def ReadFile(self,activity):
+        file_size = activity.size
         #print "Read file on the virtual SSD environment"
         # According to wikipedia, data access time is about 0.1ms, and data transfer rate is between 100-600MB/s, let's say 400MB/s is reasonable
         access_time = 0.1 / 1000 #in seconds
@@ -149,41 +153,127 @@ class SSD(VirtualEnvironment):
         return read_time
 
     
-    def WriteFile(self,file_size):
+    def WriteFile(self,activity):
+        file_size = activity.size
         #print "Write file on the virtual SSD environment"
         access_time = 0.1 / 1000 #in seconds
         transfer_rate = 400 * 1000000 #in ~bytes/s
         write_time = access_time + file_size / transfer_rate
         return write_time
         
+'''def Allocator(hdd_size,ssd_size,trace,allocation_type):
+    """create allocation based on traces and relative drive sizes"""
+    allocation = {}
+    total_size = hdd_size + ssd_size    
+    if allocation_type == 'random':
+        for filename in trace.filename_freq.keys():
+            if random.random() < hdd_size / total_size:
+                allocation[filename[1]] = 'hdd'
+            else:
+                allocation[filename[1]] = 'ssd'
+    else:
+        total_filesizes = sum(trace.filename_sizemap.values())
+        prop_ssdsize = float(ssd_size) / total_size * total_filesizes
+        filename_by_freq = [ (item[1], item[0]) for item in trace.filename_freq.items() ]
+        filename_by_freq.sort(reverse = True)
+
+        buffer_ssd = prop_ssdsize
+        for filename in filename_by_freq:
+            if buffer_ssd > 0:
+                allocation[filename[1]] = 'ssd'
+                buffer_ssd -= trace.filename_sizemap[filename[1]]
+                #print 'buffer  ', buffer_ssd
+            else:
+                allocation[filename[1]] = 'hdd'
+                #print 'hdd'
+        print allocation
+        return allocation'''
 
 class PD(VirtualEnvironment):
-    def __init__(self,hdd_size,ssd_size):
+    def __init__(self,hdd_size,ssd_size,trace,allocation_type):
         self.drive_type = "PD"
         self.HDD = HDD(hdd_size)
         self.SSD = SSD(ssd_size)
         self.total_size = hdd_size+ssd_size
+        self.hdd_size = hdd_size
         self.ssd_size = ssd_size
+        #VirtualEnvironment.__init__(self)
+        self.trace = trace
+        self.allocation_type = allocation_type
+        self.Allocator()
+        #self.allocation = self.Allocator()
+        #print self.allocation
+        
+        
+        """
+        allocation is dictionary with keys = filenames (str), values = which drive (str)
+        """
         VirtualEnvironment.__init__(self)
+    
+    def Allocator(self):
+        """create allocation based on traces and relative drive sizes"""
+        self.allocation = {}        
+        if self.allocation_type == 'random':
+            for filename in self.trace.filename_freq.keys():
+                if random.random() < self.hdd_size / self.total_size:
+                    self.allocation[filename[1]] = 'hdd'
+                else:
+                    self.allocation[filename[1]] = 'ssd'
+        else:
+            total_filesizes = sum(self.trace.filename_sizemap.values())
+            prop_ssdsize = float(self.ssd_size) / self.total_size * total_filesizes
+            filename_by_freq = [ (item[1], item[0]) for item in self.trace.filename_freq.items() ]
+            filename_by_freq.sort(reverse = True)
+
+            buffer_ssd = prop_ssdsize
+            for filename in filename_by_freq:
+                if buffer_ssd > 0:
+                    self.allocation[filename[1]] = 'ssd'
+                    buffer_ssd -= self.trace.filename_sizemap[filename[1]]
+                    #print 'buffer  ', buffer_ssd
+                else:
+                    self.allocation[filename[1]] = 'hdd'
+                    #print 'hdd'
+            print self.allocation
         
 
-    def ReadFile(self, file_size):
+    def ReadFile(self, activity):
+        file_size = activity.size
         #print "Read file on the virtual Phoenix Drive environment"
-        #eventually do this based on file extensions and other parameters, for now just choose at random
-        drive = "hdd" if randrange(0,self.total_size) > self.ssd_size else 'ssd'
+        
+        ## THIS IS WHERE IT SHOWS UP AS NOT HAVING THE RIGHT ALLOCATION...
+        print 'allocation:', self.allocation
+        #print 'path:', activity.pathname
+        #print self.allocation[activity.pathname]
+
+        try:
+            #print activity.pathname
+            drive = self.allocation[activity.pathname]
+        except TypeError:
+            drive = 'ssd'
+            #print 'stegosaurus'
         if drive == 'hdd':
-            read_time = self.HDD.ReadFile(file_size)
-            #temp_hdd = new HDD()
-            #read_time = temp_hdd.ReadFile(file_size)
+            #print 'turtles'
+            read_time = self.HDD.ReadFile(activity)
         else :
-            read_time = self.SSD.ReadFile(file_size)
+            read_time = self.SSD.ReadFile(activity)
         return read_time
 
-    def WriteFile(self, file_size):
+    def WriteFile(self, activity):
+        file_size = activity.size
         #print "Write file on the virtual Phoenix Drive environment"
-        drive = "hdd" if randrange(0,self.HDD.size+self.SSD.size) > self.SSD.size else 'ssd'
+
+        ## THIS IS WHERE IT SHOWS UP AS NOT HAVING THE RIGHT ALLOCATION...
+        print 'allocation:', self.allocation
+        #print 'path:', activity.pathname
+        #print self.allocation[activity.pathname]
+
+        try:
+            drive = self.allocation[activity.pathname]
+        except TypeError:
+            drive = 'ssd'
         if drive == 'hdd':
-            write_time = self.HDD.WriteFile(file_size)
+            write_time = self.HDD.WriteFile(activity)
         else :
-            write_time = self.SSD.WriteFile(file_size)
+            write_time = self.SSD.WriteFile(activity)
         return write_time

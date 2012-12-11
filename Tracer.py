@@ -15,6 +15,8 @@ class Trace:
             - activities : <list> of <Activity> objects
         """
         self.activities = []
+        self.filename_freq = {}
+        self.filename_sizemap = {}
 
     def Parse(self, filename):
         """
@@ -38,6 +40,12 @@ class Trace:
             activity = Activity()
             if activity.Parse(line):
                 self.activities.append( activity )
+                # Improve here by doing try / except instead of going through linearly
+                try:
+                    self.filename_freq[activity.pathname] += 1
+                except  KeyError:
+                    self.filename_freq[activity.pathname] = 1
+                    self.filename_sizemap[activity.pathname] = activity.size
 
 
 class Activity:
