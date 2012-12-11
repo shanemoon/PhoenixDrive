@@ -188,7 +188,8 @@ def phoenix_curve_study_with_real_data(traces):
     
     
 def drive_type_comparitive_study(traces):
-     # Initiate Simulators
+    # Initiate Simulators
+    print "=== Initiate Simulators ==="
     hdd_simulator = Simulator( traces, HDD(1024) )
     ssd_simulator = Simulator( traces, SSD(128) )
 
@@ -196,12 +197,14 @@ def drive_type_comparitive_study(traces):
     pd_simulator_freq = Simulator( traces, PD(300,64, traces[0], 'frequency') )
 
     # Run Simulators
+    print "=== Start Simulation ==="
     hdd_simulator.Simulate()
     ssd_simulator.Simulate()
     pd_simulator_rand.Simulate()
     pd_simulator_freq.Simulate()
 
     # Analyze and Compare the Results
+    print "=== Compare the results ==="
     Compare('comparison.png',
             [hdd_simulator.env.reporter,
              ssd_simulator.env.reporter,
@@ -222,7 +225,7 @@ if __name__ == '__main__':
 
     drive_type_comparitive_study(traces)
     # phoenix_curve_study(traces)
-    phoenix_curve_study_with_real_data(traces)
+    #phoenix_curve_study_with_real_data(traces)
 
     
     

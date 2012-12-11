@@ -216,9 +216,9 @@ class PD(VirtualEnvironment):
         if self.allocation_type == 'random':
             for filename in self.trace.filename_freq.keys():
                 if random.random() < self.hdd_size / self.total_size:
-                    self.allocation[filename[1]] = 'hdd'
+                    self.allocation[filename] = 'hdd'
                 else:
-                    self.allocation[filename[1]] = 'ssd'
+                    self.allocation[filename] = 'ssd'
         else:
             total_filesizes = sum(self.trace.filename_sizemap.values())
             prop_ssdsize = float(self.ssd_size) / self.total_size * total_filesizes
@@ -234,7 +234,7 @@ class PD(VirtualEnvironment):
                 else:
                     self.allocation[filename[1]] = 'hdd'
                     #print 'hdd'
-            print self.allocation
+            #print self.allocation
         
 
     def ReadFile(self, activity):
@@ -242,7 +242,7 @@ class PD(VirtualEnvironment):
         #print "Read file on the virtual Phoenix Drive environment"
         
         ## THIS IS WHERE IT SHOWS UP AS NOT HAVING THE RIGHT ALLOCATION...
-        print 'allocation:', self.allocation
+        #print 'allocation:', self.allocation
         #print 'path:', activity.pathname
         #print self.allocation[activity.pathname]
 
@@ -264,13 +264,13 @@ class PD(VirtualEnvironment):
         #print "Write file on the virtual Phoenix Drive environment"
 
         ## THIS IS WHERE IT SHOWS UP AS NOT HAVING THE RIGHT ALLOCATION...
-        print 'allocation:', self.allocation
+        #print 'allocation:', self.allocation
         #print 'path:', activity.pathname
         #print self.allocation[activity.pathname]
 
         try:
             drive = self.allocation[activity.pathname]
-        except TypeError:
+        except:
             drive = 'ssd'
         if drive == 'hdd':
             write_time = self.HDD.WriteFile(activity)
