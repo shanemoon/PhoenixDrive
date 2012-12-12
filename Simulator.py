@@ -122,7 +122,7 @@ def generate_phoenix_curve_plot_with_real_data(list_io_speeds, pcs, allocation_m
     filename = 'PhoenixCurve_RealData_%s.png' % allocation_method
 
     fig = plt.figure(figsize=(9,6))
-    fig.suptitle("Phoenix Curve with Allocation Method %s" % allocation_method)
+    fig.suptitle("Phoenix Curve with Allocation Method: %s" % allocation_method)
 
     io_time_plot = fig.add_subplot(1,1,1)
     io_time_plot.set_title("Average I/O Speed vs. Total Disk Size (SSD + HDD)")
@@ -138,9 +138,31 @@ def generate_phoenix_curve_plot_with_real_data(list_io_speeds, pcs, allocation_m
         print("Lengths of io_time arrays:", len(pd_io_speeds) )
         print("Length of total_sizes array:", len(total_sizes) )
         
-        io_time_plot.plot( total_sizes, pd_io_speeds, label="Budget: $%s" % pc.budget )
+        io_time_plot.plot( total_sizes, pd_io_speeds, label="Budget: $%s" % pc.budget, marker='o', linestyle='-',  )
     io_time_plot.legend()
     plt.savefig(filename)
+
+def file_access_frequency_study(trace):
+    filename = 'PhoenixCurve_Data_Frequency.png'
+
+    fig = plt.figure(figsize=(9,6))
+
+    io_frequency_plot = fig.add_subplot(1,1,1)
+    io_frequency_plot.set_title("File I/O Frequency of the Trace\n(50 Most Frequently Accessed Files)\n")
+    io_frequency_plot.set_xlabel("Files")
+    io_frequency_plot.set_ylabel("File I/O Frequency")
+    
+    filename_by_freq = [ (item[1], item[0]) for item in trace.filename_freq.items() ]
+    filename_by_freq.sort(reverse = True)
+    print "------ The 50 most frequently accessed files are ------"
+    print filename_by_freq[0:50]
+    print "Total number of accessed files: %i" % len(filename_by_freq)
+
+    io_frequency = [item[0] for item in filename_by_freq]
+    io_frequency_plot.plot( io_frequency[0:50], marker='o', linestyle='-', color='r')
+
+    plt.savefig(filename)
+
 
 def phoenix_curve_study_with_real_data(traces):
     """
@@ -148,8 +170,8 @@ def phoenix_curve_study_with_real_data(traces):
         * Please refer to the <PhoenixConfiguration> class definition above.
     """
     pc1 = PhoenixConfiguration(100, [ (0, 128), (300, 64), (1024, 0) ])
-    pc2 = PhoenixConfiguration(300, [ (0, 160), (1024, 240), (3000, 0) ])
-    pc3 = PhoenixConfiguration(500, [ (0, 480), (2000, 160), (4000, 0) ])
+    pc2 = PhoenixConfiguration(300, [ (0, 256), (1024, 240), (2048, 128), (3072, 0) ])
+    pc3 = PhoenixConfiguration(500, [ (0, 512), (1024, 480), (2048, 256), (3072, 240), (3500, 128), (4096, 0) ])
     pcs = [pc1, pc2, pc3]
     list_io_speeds_rand = []
     list_io_speeds_freq = []
@@ -161,12 +183,18 @@ def phoenix_curve_study_with_real_data(traces):
         for size in pc.sizes:
             hdd_size = size[0]
             ssd_size = size[1]
+            print("Initializing Phoenix Drives")
+            pd_rand = PD(hdd_size, ssd_size, traces[0],'random')
+            pd_freq = PD(hdd_size, ssd_size, traces[0],'frequency')
+
             print("Initializing simulators")
-            pd_simulator_rand = Simulator( traces, PD(hdd_size, ssd_size, traces[0],'random') )
-            pd_simulator_freq = Simulator( traces, PD(hdd_size, ssd_size, traces[0],'frequency') )
+            pd_simulator_rand = Simulator( traces, pd_rand )
+            pd_simulator_freq = Simulator( traces, pd_freq )
+
             print("Running Phoenix Drives")
             pd_simulator_rand.Simulate()
             pd_simulator_freq.Simulate()
+
             print("Saving Results")
 
             # Average Speed = (# of i/o Operations) / (# of Total Cumulative I/O Time in miliseconds)
@@ -223,7 +251,8 @@ if __name__ == '__main__':
     traces = [trace1]
 
     #drive_type_comparitive_study(traces)
-    # phoenix_curve_study(traces)
+    #phoenix_curve_study(traces)
+    #file_access_frequency_study(traces[0])
     phoenix_curve_study_with_real_data(traces)
 
     
