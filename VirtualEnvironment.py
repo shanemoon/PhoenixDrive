@@ -71,27 +71,33 @@ class VirtualEnvironment:
         # Convert micro second to second
         io_start_time = activity.start_time / 1000000.0
 
-        if activity.access_type == 'R':
+        # Handle activity according to their access_type.
+        # There are some weird cases where io_start_time is older than the most recent one.
+        # We're ignoring such cases.
+        if (activity.access_type == 'R') and (len(self.reporter.read_start_times) == 0 or io_start_time > self.reporter.read_start_times[-1]):
             io_duration = self.ReadFile(activity)
             self.reporter.read_time += io_duration
             self.reporter.read_durations.append(io_duration)
             self.reporter.read_durations_cumulative.append(self.reporter.read_time)
             self.reporter.read_start_times.append(io_start_time)
+            self.reporter.total_io_time += io_duration
+            self.reporter.total_num_activity += 1    
 
-        elif activity.access_type == 'W':
+        elif (activity.access_type == 'W') and (len(self.reporter.read_start_times) == 0 or io_start_time > self.reporter.write_start_times[-1]):
             io_duration = self.WriteFile(activity)
             self.reporter.write_time += io_duration
             self.reporter.write_durations.append(io_duration)
             self.reporter.write_durations_cumulative.append(self.reporter.write_time)
             self.reporter.write_start_times.append(io_start_time)
+            self.reporter.total_io_time += io_duration
+            self.reporter.total_num_activity += 1    
             
         else:
             # NEED TO HANDLE ERROR HERE
             pass
 
         # For any activity type
-        self.reporter.total_io_time += io_duration
-        self.reporter.total_num_activity += 1
+
 
     def ReadFile(self, activity):
         pass
@@ -190,11 +196,11 @@ class SSD(VirtualEnvironment):
         return allocation'''
 
 class PD(VirtualEnvironment):
-    def __init__(self,hdd_size,ssd_size,trace,allocation_type):
-        self.drive_type = "PD"
+    def __init__(self, hdd_size, ssd_size, trace, allocation_type):
+        self.drive_type = "PD (%s)" % allocation_type
         self.HDD = HDD(hdd_size)
         self.SSD = SSD(ssd_size)
-        self.total_size = hdd_size+ssd_size
+        self.total_size = hdd_size + ssd_size
         self.hdd_size = hdd_size
         self.ssd_size = ssd_size
         #VirtualEnvironment.__init__(self)
@@ -215,7 +221,7 @@ class PD(VirtualEnvironment):
         self.allocation = {}        
         if self.allocation_type == 'random':
             for filename in self.trace.filename_freq.keys():
-                if random.random() < self.hdd_size / self.total_size:
+                if random.random() < float(self.hdd_size) / self.total_size:
                     self.allocation[filename] = 'hdd'
                 else:
                     self.allocation[filename] = 'ssd'

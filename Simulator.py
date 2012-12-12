@@ -57,7 +57,7 @@ class Simulator:
 
 def Compare(filename, reporters):
 
-        fig = plt.figure(figsize=(9,9))
+        fig = plt.figure(figsize=(9,11))
         fig.suptitle("Comparision Result")
 
         writes = fig.add_subplot(2,1,1)
@@ -81,7 +81,7 @@ def Compare(filename, reporters):
         plt.savefig(filename)
 
 def generate_phoenix_curve_plot(io_time, ssd_sizes):
-    fig = plt.figure(figsize=(9,9))
+    fig = plt.figure(figsize=(9,11))
     fig.suptitle("Phoenix Curve")
     io_time_plot = fig.add_subplot(2,1,1)
     io_time_plot.set_title("Total I/O vs. ssd buffer size")
@@ -113,16 +113,16 @@ def phoenix_curve_study(traces):
     generate_phoenix_curve_plot(pd_io_times,ssd_sizes)
 
 
-def generate_phoenix_curve_plot_with_real_data(list_io_speeds, pcs):
+def generate_phoenix_curve_plot_with_real_data(list_io_speeds, pcs, allocation_method):
     """
         pd_io_speeds : <List> of <io_speeds>
         pc : An instance of <PhoenixConfiguration>
     """
     
-    filename = 'PhoenixCurve_RealData.png'
+    filename = 'PhoenixCurve_RealData_%s.png' % allocation_method
 
     fig = plt.figure(figsize=(9,6))
-    fig.suptitle("Phoenix Curve with Real Data (given David's Traces)")
+    fig.suptitle("Phoenix Curve with Allocation Method %s" % allocation_method)
 
     io_time_plot = fig.add_subplot(1,1,1)
     io_time_plot.set_title("Average I/O Speed vs. Total Disk Size (SSD + HDD)")
@@ -132,16 +132,13 @@ def generate_phoenix_curve_plot_with_real_data(list_io_speeds, pcs):
     
     for i in range(len(pcs)):
         pc = pcs[i]
-        pd_io_speeds_rand = list_io_speeds[2*i]
-        print pd_io_speeds_rand
-        pd_io_speeds_freq = list_io_speeds[2*i+1]
+        pd_io_speeds = list_io_speeds[i]
         total_sizes = [pc_size[0] + pc_size[1] for pc_size in pc.sizes]
         
-        print("Lengths of io_time arrays:", len(pd_io_speeds_rand), len(pd_io_speeds_freq) )
+        print("Lengths of io_time arrays:", len(pd_io_speeds) )
         print("Length of total_sizes array:", len(total_sizes) )
         
-        io_time_plot.plot( total_sizes, pd_io_speeds_rand, label="Budget: $%s Allocation: Random" % pc.budget )
-        io_time_plot.plot( total_sizes, pd_io_speeds_freq, label="Budget: $%s Allocation: Frequency" % pc.budget )
+        io_time_plot.plot( total_sizes, pd_io_speeds, label="Budget: $%s" % pc.budget )
     io_time_plot.legend()
     plt.savefig(filename)
 
@@ -154,7 +151,8 @@ def phoenix_curve_study_with_real_data(traces):
     pc2 = PhoenixConfiguration(300, [ (0, 160), (1024, 240), (3000, 0) ])
     pc3 = PhoenixConfiguration(500, [ (0, 480), (2000, 160), (4000, 0) ])
     pcs = [pc1, pc2, pc3]
-    list_io_speeds = []
+    list_io_speeds_rand = []
+    list_io_speeds_freq = []
 
     for pc in pcs:
         pd_io_speeds_rand = []
@@ -181,10 +179,11 @@ def phoenix_curve_study_with_real_data(traces):
         print(len(pd_io_speeds_rand) )
         print(len(pd_io_speeds_freq) )
         print(len(pc.sizes) )
-        list_io_speeds.append( pd_io_speeds_rand )
-        list_io_speeds.append( pd_io_speeds_freq )
+        list_io_speeds_rand.append( pd_io_speeds_rand )
+        list_io_speeds_freq.append( pd_io_speeds_freq )
         
-    generate_phoenix_curve_plot_with_real_data(list_io_speeds, pcs)
+    generate_phoenix_curve_plot_with_real_data(list_io_speeds_rand, pcs, 'Random')
+    generate_phoenix_curve_plot_with_real_data(list_io_speeds_freq, pcs, 'Frequency')
     
     
 def drive_type_comparitive_study(traces):
@@ -223,9 +222,9 @@ if __name__ == '__main__':
 
     traces = [trace1]
 
-    drive_type_comparitive_study(traces)
+    #drive_type_comparitive_study(traces)
     # phoenix_curve_study(traces)
-    #phoenix_curve_study_with_real_data(traces)
+    phoenix_curve_study_with_real_data(traces)
 
     
     
